@@ -70,6 +70,7 @@ def play():
     while True:
         print(p.current_room)
         print(p.current_room.description)
+        print(p.curent_room.items)
         direction = input("which direction to move?")
         if direction in direction_map.keys():
          
