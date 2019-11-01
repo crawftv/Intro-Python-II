@@ -1,5 +1,6 @@
 from room import Room
 from player import Player
+from item import Item
 
 # Declare all the rooms
 
@@ -41,6 +42,10 @@ room["narrow"].w_to = room["foyer"]
 room["narrow"].n_to = room["treasure"]
 room["treasure"].s_to = room["narrow"]
 
+
+# add items to room
+items = {"chekovs_gun": Item("chekovs_gun", "must be used by the end of the game")}
+room["outside"].items[items["chekovs_gun"].name] =  items["chekovs_gun"]
 #
 # Main
 #
@@ -62,27 +67,61 @@ direction_map = {
     "e": "e_to",
     "w": "w_to",
 }
+take_synonyms = ["take", "get"]
+drop_synonyms = ["drop"]
+
+def take_item(item:str,p:Player):
+    try:
+        p.items[item] =p.current_room.items[item]
+        del p.current_room.items[item]
+        items[item].on_take()
+    except:
+        print("cannot add item to inventory")
+        
+def drop_item(item:str,p:Player):
+    try:
+        p.current_room.items[item] = p.items[item]
+        del p.items[item]
+        items[item].on_drop()
+    except:
+        print("Cannot drop that item")
 
 
 def play():
-
     p = Player(room["outside"])
     while True:
-        print(p.current_room)
+        print(f"\n\nYou are in {p.current_room}")
         print(p.current_room.description)
-        print(p.curent_room.items)
-        direction = input("which direction to move?")
-        if direction in direction_map.keys():
-         
-            try:
-                p.current_room = getattr(p.current_room, direction_map[direction])
-
-            except:
-                print("error, can't move in that diection")
-        elif direction =="q":
-            break
+        if len(p.current_room.items) == 0:
+            print("The room is empty")
         else:
-            print("error, that direction is not allowed")
+            print(f"The room contains {p.current_room.items}")
+        sentence = input("what action will you take?\n")
+        t = sentence.split(" ")
+        v = t[0]
+        try:
+            n = t[1]
+        except:
+            pass
+        if len(t) == 1:
+            if v in direction_map.keys():
+                try:
+                    p.current_room = getattr(p.current_room, direction_map[v])
+                except:
+                    print("error, can't move in that diection")
+            elif v == "q":
+                return False
+            elif v in [ "i","inventory"]:
+                print(p.items)
+            else:
+                print("error, that direction is not allowed")
+        elif len(t) == 2:
+            if t[0] in take_synonyms:
+                take_item(t[1],p)
+            elif t[0] in drop_synonyms:
+                drop_item(t[1],p)
+        else:
+            print("invalid command")
 
 
 # If the user enters "q", quit the game.
